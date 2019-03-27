@@ -1,0 +1,131 @@
+"""
+Implementation of Traceroute.
+Author: Salah Uddin
+"""
+
+from socket import *
+import socket
+import struct
+import time
+import random
+
+MAX_NUM_HOPS = 30
+TIME_OUT = 2.0
+NUM_OF_TEST = 3
+
+sequece_number = 0
+
+def checksum(packet):
+    sum = 0
+    count_to = (len(packet) / 2) * 2
+    for count in xrange(0, count_to, 2):
+        this = ord(packet[count + 1]) * 256 + ord(packet[count])
+        sum = sum + this
+        sum = sum & 0xffffffff
+
+    if count_to < len(packet):
+        sum = sum + ord(packet[len(source_string) - 1])
+        sum = sum & 0xffffffff
+
+    sum = (sum >> 16) + (sum & 0xffff)
+    sum = sum + (sum >> 16)
+    answer = ~sum
+    answer = answer & 0xffff
+
+    answer = answer >> 8 | (answer << 8 & 0xff00)
+
+    return answer
+
+
+def get_packet():
+    icmp_req_type = 8
+    code = 0
+    check_sum = 0
+    packet_id = random.randint(4000, 6000) & 0xFFFF
+    global sequece_number
+    sequece_number = sequece_number + 1
+
+    header = struct.pack("bbHHh", icmp_req_type, code, check_sum, packet_id, sequece_number)
+
+    sending_time = time.time()
+    data = struct.pack("d", sending_time)
+
+    check_sum = checksum(header + data)
+    check_sum = htons(check_sum)
+
+    header = struct.pack("bbHHh", icmp_req_type, code, check_sum, packet_id, sequece_number)
+    packet = header + data
+
+    return packet
+
+
+def receive_response(raw_socket):
+    try:
+        packet, addr = raw_socket.recvfrom(1024)
+        receive_time = time.time()
+    except socket.timeout:
+        return -1
+
+    return (packet, addr, receive_time)
+
+
+def get_socket():
+    icmp = socket.getprotobyname("icmp")
+    raw_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, icmp)
+    raw_socket.settimeout(TIME_OUT)
+
+    return raw_socket
+
+
+def send_data(raw_socket, dest_addr):
+    data = get_packet()
+    raw_socket.sendto(data, (dest_addr, 0))
+
+
+def print_route(ttl, hop_addr, rtt_info):
+    if hop_addr != "":
+        hop_addr = "(" + hop_addr + ")"
+        print ttl, "  ", hop_addr, "  ",
+
+    for x in rtt_info:
+        if x == "*":
+            print x, " ",
+        else:
+            print x, "ms", " ",
+
+    print ""
+
+
+def find_route(raw_socket, dest_addr):
+    for ttl in range(1, MAX_NUM_HOPS):
+        raw_socket.setsockopt(socket.IPPROTO_IP, socket.IP_TTL, struct.pack('I', ttl))
+
+        hop_addr = ""
+        rtt_info = []
+        for n in range(NUM_OF_TEST):
+            send_data(raw_socket, dest_addr)
+            send_time = time.time()
+
+            response = receive_response(raw_socket)
+            response_time = time.time()
+            rtt = response_time - send_time
+
+            if response == -1:
+                rtt_info.append("*")
+            else:
+                rtt_info.append(rtt*1000)
+                hop_addr = response[1][0]
+
+        print_route(ttl, hop_addr, rtt_info)
+        if dest_addr == hop_addr:
+            return;
+
+
+if __name__ == '__main__':
+    dest_name = "uh.edu"
+    dest_addr = socket.gethostbyname(dest_name)
+    print "Traceroute to ", dest_name, "(", dest_addr, ")", MAX_NUM_HOPS, "hops max", "16 bytes packets"
+
+    raw_socket = get_socket()
+    find_route(raw_socket, dest_addr)
+    raw_socket.close()
