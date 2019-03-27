@@ -83,9 +83,17 @@ def send_data(raw_socket, dest_addr):
 
 
 def print_route(ttl, hop_addr, rtt_info):
+    hostname = ""
+    try:
+        hostaddr = socket.gethostbyaddr(hop_addr)
+        hostname = hostaddr[0]
+    except Exception:
+        hostname = hop_addr
+
+    print ttl, "  ",
     if hop_addr != "":
         hop_addr = "(" + hop_addr + ")"
-        print ttl, "  ", hop_addr, "  ",
+        print hostname, hop_addr, "  ",
 
     for x in rtt_info:
         if x == "*":
