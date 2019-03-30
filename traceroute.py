@@ -101,8 +101,7 @@ def print_route(ttl, hop_addr, rtt_info):
         if x == "*":
             print x, " ",
         else:
-            print x, "ms", " ",
-
+            sys.stdout.write('%.03f ms  ' % x)
     print ""
 
 
