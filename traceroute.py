@@ -1,6 +1,7 @@
 """
 Implementation of Traceroute.
 Author: Salah Uddin
+Python 2.7
 """
 
 from socket import *
@@ -116,12 +117,12 @@ def find_route(raw_socket, dest_addr):
             send_time = time.time()
 
             response = receive_response(raw_socket)
-            response_time = time.time()
-            rtt = response_time - send_time
 
             if response == -1:
                 rtt_info.append("*")
             else:
+                response_time = response[2]
+                rtt = response_time - send_time
                 rtt_info.append(rtt*1000)
                 hop_addr = response[1][0]
 
