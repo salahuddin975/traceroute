@@ -8,6 +8,8 @@ import socket
 import struct
 import time
 import random
+import sys
+
 
 MAX_NUM_HOPS = 30
 TIME_OUT = 2.0
@@ -130,8 +132,21 @@ def find_route(raw_socket, dest_addr):
 
 
 if __name__ == '__main__':
-    dest_name = "uh.edu"
-    dest_addr = socket.gethostbyname(dest_name)
+    if len(sys.argv) < 2:
+        print "<Usage:>"
+        print "sudo python traceroute.py [host_name]"
+        print "Ex. sudo python traceroute.py www.uh.edu"
+        sys.exit()
+
+    dest_name = sys.argv[1]
+
+    try:
+        dest_addr = socket.gethostbyname(dest_name)
+    except:
+        print dest_name + ": Name or service not known"
+        print "Cannot handle \"host\" cmdline arg '" + dest_name + "' on position 1 (argc 1)"
+        sys.exit()
+
     print "Traceroute to ", dest_name, "(", dest_addr, ")", MAX_NUM_HOPS, "hops max", "16 bytes packets"
 
     raw_socket = get_socket()
