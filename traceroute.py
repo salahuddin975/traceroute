@@ -1,6 +1,6 @@
 """
 Implementation of Traceroute.
-Author: Salah Uddin
+Salah Uddin
 Python 2.7
 """
 
@@ -149,6 +149,11 @@ if __name__ == '__main__':
 
     print "Traceroute to ", dest_name, "(", dest_addr, ")", MAX_NUM_HOPS, "hops max", "16 bytes packets"
 
-    raw_socket = get_socket()
+    try:
+        raw_socket = get_socket()
+    except:
+        print "Can't create socket! Please use superuser mode."
+        sys.exit()
+
     find_route(raw_socket, dest_addr)
     raw_socket.close()
