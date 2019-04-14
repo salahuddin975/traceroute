@@ -10,6 +10,7 @@ import struct
 import time
 import random
 import sys
+import geolocation
 
 
 MAX_NUM_HOPS = 30
@@ -107,6 +108,7 @@ def print_route(ttl, hop_addr, rtt_info):
 
 
 def find_route(raw_socket, dest_addr):
+    route_info = []
     for ttl in range(1, MAX_NUM_HOPS):
         raw_socket.setsockopt(socket.IPPROTO_IP, socket.IP_TTL, struct.pack('I', ttl))
 
@@ -127,8 +129,12 @@ def find_route(raw_socket, dest_addr):
                 hop_addr = response[1][0]
 
         print_route(ttl, hop_addr, rtt_info)
+        route_info.append((ttl, hop_addr, rtt_info))
+
         if dest_addr == hop_addr:
-            return;
+            return route_info;
+
+    return route_info
 
 
 if __name__ == '__main__':
@@ -155,5 +161,8 @@ if __name__ == '__main__':
         print "Can't create socket! Please use superuser mode."
         sys.exit()
 
-    find_route(raw_socket, dest_addr)
+    route_info = find_route(raw_socket, dest_addr)
     raw_socket.close()
+
+    print "\n Geolocation sequence of the route:"
+    geolocation.print_geolocation(route_info)
