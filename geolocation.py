@@ -6,6 +6,11 @@ def print_geolocation(route_info):
 
     for hop_addr in route_info:
         addr = hop_addr[1]
+
+        if addr == "":
+            print hop_addr[0], "  *   *   *"
+            continue
+
         g = geocoder.ip(addr)
 
         try:
@@ -13,7 +18,7 @@ def print_geolocation(route_info):
             geo_addr = str(g.latlng[0]) + ', ' + str(g.latlng[1])
 
             location = geolocator.reverse(geo_addr)
-            print addr, "-", location, " (" + str(g.latlng[0]) + ", " + str(g.latlng[1]) + ")"
+            print hop_addr[0]," ", addr, "-", location, " (" + str(g.latlng[0]) + ", " + str(g.latlng[1]) + ")"
         except:
-            print addr, "not solved!"
+            print hop_addr[0]," ",addr, "not resolved!"
 
