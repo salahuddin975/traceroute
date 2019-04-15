@@ -1,5 +1,5 @@
 """
-Implementation of Traceroute.
+Implementation of ping.
 Salah Uddin
 Python 2.7
 """
@@ -13,11 +13,11 @@ import sys
 import geolocation
 
 
-MAX_NUM_HOPS = 30
+MAX_NUM_HOPS = 240
 TIME_OUT = 2.0
-NUM_OF_TEST = 3
 
 sequece_number = 0
+rtt_cumulative = 0
 
 def checksum(packet):
     sum = 0
@@ -76,7 +76,9 @@ def receive_response(raw_socket):
 def get_socket():
     icmp = socket.getprotobyname("icmp")
     raw_socket = socket.socket(socket.AF_INET, socket.SOCK_RAW, icmp)
+
     raw_socket.settimeout(TIME_OUT)
+    raw_socket.setsockopt(socket.IPPROTO_IP, socket.IP_TTL, struct.pack('I', MAX_NUM_HOPS))
 
     return raw_socket
 
@@ -86,65 +88,41 @@ def send_data(raw_socket, dest_addr):
     raw_socket.sendto(data, (dest_addr, 0))
 
 
-def print_route(ttl, hop_addr, rtt_info):
-    hostname = ""
-    try:
-        hostaddr = socket.gethostbyaddr(hop_addr)
-        hostname = hostaddr[0]
-    except Exception:
-        hostname = hop_addr
+def print_rtt_info(seq_no, addr, rtt):
+    global rtt_cumulative
+    rtt_cumulative = rtt_cumulative + rtt
+    print str(seq_no) + ". ", addr, " time:", rtt, "ms,", " average:", rtt_cumulative/seq_no, "ms"
 
-    print ttl, "  ",
-    if hop_addr != "":
-        hop_addr = "(" + hop_addr + ")"
-        print hostname, hop_addr, "  ",
 
-    for x in rtt_info:
-        if x == "*":
-            print x, " ",
+def find_avg_ttl(raw_socket, dest_name, dest_addr, num_of_test):
+    hop_addr = dest_name + "(" + dest_addr + ")"
+
+    for n in range(num_of_test):
+        send_data(raw_socket, dest_addr)
+        send_time = time.time()
+
+        response = receive_response(raw_socket)
+
+        if response == -1:
+            rtt_info = 2000
         else:
-            sys.stdout.write('%.03f ms  ' % x)
-    print ""
+            response_time = response[2]
+            rtt = response_time - send_time
+            rtt_info = rtt*1000
 
-
-def find_route(raw_socket, dest_addr):
-    route_info = []
-    for ttl in range(1, MAX_NUM_HOPS):
-        raw_socket.setsockopt(socket.IPPROTO_IP, socket.IP_TTL, struct.pack('I', ttl))
-
-        hop_addr = ""
-        rtt_info = []
-        for n in range(NUM_OF_TEST):
-            send_data(raw_socket, dest_addr)
-            send_time = time.time()
-
-            response = receive_response(raw_socket)
-
-            if response == -1:
-                rtt_info.append("*")
-            else:
-                response_time = response[2]
-                rtt = response_time - send_time
-                rtt_info.append(rtt*1000)
-                hop_addr = response[1][0]
-
-        print_route(ttl, hop_addr, rtt_info)
-        route_info.append((ttl, hop_addr, rtt_info))
-
-        if dest_addr == hop_addr:
-            return route_info;
-
-    return route_info
+        print_rtt_info(n+1, hop_addr, rtt_info)
+        time.sleep(.5)
 
 
 if __name__ == '__main__':
-    if len(sys.argv) < 2:
+    if len(sys.argv) < 3:
         print "<Usage:>"
-        print "sudo python traceroute.py [host_name]"
-        print "Ex. sudo python traceroute.py www.uh.edu"
+        print "sudo python ping.py [host_name] [num_of_experiment]"
+        print "Ex. sudo python ping.py www.uh.edu 100"
         sys.exit()
 
     dest_name = sys.argv[1]
+    num_of_test = int(sys.argv[2])
 
     try:
         dest_addr = socket.gethostbyname(dest_name)
@@ -153,7 +131,7 @@ if __name__ == '__main__':
         print "Cannot handle \"host\" cmdline arg '" + dest_name + "' on position 1 (argc 1)"
         sys.exit()
 
-    print "Traceroute to ", dest_name, "(", dest_addr, ")", MAX_NUM_HOPS, "hops max", "16 bytes packets"
+    print "Ping to ", dest_name, "(", dest_addr, ")"
 
     try:
         raw_socket = get_socket()
@@ -161,9 +139,6 @@ if __name__ == '__main__':
         print "Can't create socket! Please use superuser mode."
         sys.exit()
 
-    route_info = find_route(raw_socket, dest_addr)
-    raw_socket.close()
+    avg_ttl = find_avg_ttl(raw_socket, dest_name, dest_addr, num_of_test)
 
-    print "\n\t Geolocation sequence of the route:"
-    print "======================================================"
-    geolocation.print_geolocation(route_info)
+    raw_socket.close()
