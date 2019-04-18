@@ -98,6 +98,9 @@ def print_rtt_info(seq_no, addr, rtt):
 
 
 def find_avg_ttl(dest_name, dest_addr, num_of_test):
+    global rtt_cumulative
+    rtt_cumulative = 0
+
     try:
         raw_socket = get_socket()
     except:

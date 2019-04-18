@@ -33,7 +33,7 @@ def send_data(thread_no, packet_size, sender_addr):
     sock.close()
 
 
-def send_512KB():
+def send_512KB(sender_addr):
     for i in range(0, 25):
         try:
             thread.start_new_thread( send_data, (i, DATA_SIZE, sender_addr) )
@@ -57,13 +57,13 @@ if __name__ == '__main__':
     try:
         sending_rate = 0
         while True:
-            print "current sending rate: ", sending_rate, " KB"
+            print "current sending rate: ", sending_rate, " MB"
             print "add sending rate:",
             add_rate = raw_input()
 
             if (add_rate == 'yes') or (add_rate == 'y'):
-                send_512KB()
-                sending_rate += 512
+                send_512KB(sender_addr)
+                sending_rate += 0.5
             elif add_rate == 'exit':
                 break
 
