@@ -57,13 +57,13 @@ if __name__ == '__main__':
     try:
         sending_rate = 0
         while True:
-            print "current sending rate: ", sending_rate, " MB"
+            print "current sending rate: ", sending_rate, " Mb"
             print "add sending rate:",
             add_rate = raw_input()
 
             if (add_rate == 'yes') or (add_rate == 'y'):
                 send_512KB(sender_addr)
-                sending_rate += 0.5
+                sending_rate += 4
             elif add_rate == 'exit':
                 break
 
