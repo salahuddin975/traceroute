@@ -164,6 +164,6 @@ if __name__ == '__main__':
     route_info = find_route(raw_socket, dest_addr)
     raw_socket.close()
 
-    print "\n\t Geolocation sequence of the route:"
+    print "\n\t Geolocation of the route:"
     print "======================================================"
     geolocation.print_geolocation(route_info)
