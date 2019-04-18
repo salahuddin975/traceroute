@@ -7,6 +7,9 @@ Python 2.7
 import socket
 import time
 import thread
+import sys
+
+DATA_SIZE = 1024
 
 
 def get_dummy_data(size):
@@ -33,7 +36,7 @@ def send_data(thread_no, packet_size, sender_addr):
 def send_512KB():
     for i in range(0, 25):
         try:
-            thread.start_new_thread( send_data, (i, data_size, sender_addr) )
+            thread.start_new_thread( send_data, (i, DATA_SIZE, sender_addr) )
             print "Start thread: ", i
             time.sleep(0.15)
         except:
@@ -41,8 +44,15 @@ def send_512KB():
 
 
 if __name__ == '__main__':
-    data_size = 1024
-    sender_addr = ('96.120.16.33', 10000)
+    if len(sys.argv) < 3:
+        print "<Usage:>"
+        print "sudo python congestion_client.py [dest_ip] [dest_port]"
+        print "Ex. sudo python congestion_client.py 96.120.16.33 5555"
+        sys.exit()
+
+    dest_ip = sys.argv[1]
+    dest_port = int(sys.argv[2])
+    sender_addr = (dest_ip, dest_port)
 
     try:
         sending_rate = 0

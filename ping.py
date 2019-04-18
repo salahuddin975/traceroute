@@ -91,10 +91,20 @@ def send_data(raw_socket, dest_addr):
 def print_rtt_info(seq_no, addr, rtt):
     global rtt_cumulative
     rtt_cumulative = rtt_cumulative + rtt
-    print str(seq_no) + ". ", addr, " time:", rtt, "ms,", " average:", rtt_cumulative/seq_no, "ms"
+    avg_ttl = rtt_cumulative/seq_no
+    print str(seq_no) + ". ", addr, " time:", rtt, "ms,", " average:", avg_ttl, "ms"
+
+    return avg_ttl
 
 
-def find_avg_ttl(raw_socket, dest_name, dest_addr, num_of_test):
+def find_avg_ttl(dest_name, dest_addr, num_of_test):
+    try:
+        raw_socket = get_socket()
+    except:
+        print "Can't create socket! Please use superuser mode."
+        sys.exit()
+
+    avg_ttl = 0
     hop_addr = dest_name + "(" + dest_addr + ")"
 
     for n in range(num_of_test):
@@ -110,8 +120,11 @@ def find_avg_ttl(raw_socket, dest_name, dest_addr, num_of_test):
             rtt = response_time - send_time
             rtt_info = rtt*1000
 
-        print_rtt_info(n+1, hop_addr, rtt_info)
-        time.sleep(.5)
+        avg_ttl = print_rtt_info(n+1, hop_addr, rtt_info)
+        time.sleep(.1)
+
+    raw_socket.close()
+    return  avg_ttl
 
 
 if __name__ == '__main__':
@@ -133,12 +146,6 @@ if __name__ == '__main__':
 
     print "Ping to ", dest_name, "(", dest_addr, ")"
 
-    try:
-        raw_socket = get_socket()
-    except:
-        print "Can't create socket! Please use superuser mode."
-        sys.exit()
+    avg_ttl = find_avg_ttl(dest_name, dest_addr, num_of_test)
 
-    avg_ttl = find_avg_ttl(raw_socket, dest_name, dest_addr, num_of_test)
-
-    raw_socket.close()
+    print "Average ttl: ", avg_ttl
