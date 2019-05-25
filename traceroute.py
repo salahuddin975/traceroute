@@ -158,7 +158,7 @@ if __name__ == '__main__':
     try:
         raw_socket = get_socket()
     except:
-        print "Can't create socket! Please use superuser mode."
+        print "Can't create icmp socket! Please use superuser mode."
         sys.exit()
 
     route_info = find_route(raw_socket, dest_addr)

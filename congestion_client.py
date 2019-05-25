@@ -58,7 +58,7 @@ if __name__ == '__main__':
         sending_rate = 0
         while True:
             print "current sending rate: ", sending_rate, " Mb"
-            print "add sending rate:",
+            print "add sending rate(y/exit):",
             add_rate = raw_input()
 
             if (add_rate == 'yes') or (add_rate == 'y'):

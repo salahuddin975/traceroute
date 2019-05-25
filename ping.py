@@ -104,7 +104,7 @@ def find_avg_ttl(dest_name, dest_addr, num_of_test):
     try:
         raw_socket = get_socket()
     except:
-        print "Can't create socket! Please use superuser mode."
+        print "Can't create icmp socket! Please use superuser mode."
         sys.exit()
 
     avg_ttl = 0
